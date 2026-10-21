@@ -10,7 +10,7 @@
 - 백엔드는 cmd/server, internal/httpapi, internal/database, internal/auth, internal/assets와 embedded migrations를 사용한다. loans는 아직 구현 전이며 직원 관리 화면은 제외했다.
 - SQLite 파일은 sqlite-data 볼륨에 남는다. 서버 시작 시 사용자 테이블 마이그레이션을 적용하며 허용 계정이나 관리자를 자동 생성하지 않는다.
 - 개발 로그인 뒤 장비 목록·상세 API를 조회할 수 있다. 등록·수정 API는 서버에서 관리자 역할과 요청 Origin을 확인한다. 운영 인증이 연결되기 전에는 장비 API도 개발 모드에서만 연결한다.
-- 사용자의 요청에 따라 Google 로그인 최종 검증은 뒤로 미루고 직원·관리자 개발 테스트 로그인을 제공한다. 개발 계정은 admin@example.invalid와 employee@example.invalid이며 비밀번호 없이 역할 버튼으로 로그인한다.
+- 사용자의 요청에 따라 Google 로그인 최종 검증은 뒤로 미루고 관리자 1명과 직원 A·B 2명의 개발 테스트 로그인을 제공한다. 계정은 admin@example.invalid, employee@example.invalid, employee-b@example.invalid이며 비밀번호 없이 버튼으로 선택한다.
 - APP_ENV=development와 DEV_LOGIN_ENABLED=true를 함께 지정하고 허용된 로컬 프론트 Origin을 설정해야 테스트 로그인이 켜진다. 기본값은 비활성이고 운영 환경에서 활성화를 요청하면 서버 시작을 거절한다. Compose는 로컬 개발 전용이며 운영에 그대로 배포하지 않는다.
 - 테스트 계정은 해당 설정으로 시작할 때만 DB에 생성한다. HttpOnly·SameSite 쿠키에 무작위 세션 식별자를 보관하고 실제 역할·활성 상태는 매 요청 DB에서 조회한다. 세션은 재시작 시 사라지며 Google 운영 세션 구현을 대신하지 않는다.
 

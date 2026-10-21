@@ -33,5 +33,5 @@ test('a development account can log in and log out', async () => {
   fireEvent.click(await screen.findByRole('button', { name: '관리자 테스트 로그인' }))
   await screen.findByText('관리자로 로그인했습니다.')
   fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
-  await screen.findByRole('button', { name: '직원 테스트 로그인' })
+  await screen.findByRole('button', { name: '직원 A 테스트 로그인' })
 })

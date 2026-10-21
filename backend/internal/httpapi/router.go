@@ -8,6 +8,7 @@ import (
 
 	"github.com/Mrbaeksang/kch/backend/internal/assets"
 	"github.com/Mrbaeksang/kch/backend/internal/auth"
+	"github.com/Mrbaeksang/kch/backend/internal/loans"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -19,6 +20,7 @@ func NewRouter(database *sql.DB, development *auth.Development) http.Handler {
 	if development != nil {
 		development.Register(router)
 		assets.Register(router, database, development)
+		loans.Register(router, database, development)
 	}
 	router.Get("/healthz", func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")

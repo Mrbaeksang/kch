@@ -41,7 +41,7 @@ func NewDevelopment(database *sql.DB, environment string, enabled bool, origin s
 	if origin != "http://localhost:5173" && origin != "http://127.0.0.1:5173" {
 		return nil, errors.New("development login requires a loopback frontend origin")
 	}
-	for _, account := range []struct{ email, role string }{{"admin@example.invalid", "admin"}, {"employee@example.invalid", "employee"}} {
+	for _, account := range []struct{ email, role string }{{"admin@example.invalid", "admin"}, {"employee@example.invalid", "employee"}, {"employee-b@example.invalid", "employee"}} {
 		if _, err := database.Exec("INSERT INTO users(email, role) VALUES (?, ?) ON CONFLICT(email) DO NOTHING", account.email, account.role); err != nil {
 			return nil, err
 		}
@@ -98,7 +98,8 @@ func (development *Development) Register(router chi.Router) {
 			return
 		}
 		var input struct {
-			Role string `json:"role"`
+			Role    string `json:"role"`
+			Account string `json:"account"`
 		}
 		if json.NewDecoder(http.MaxBytesReader(writer, request.Body, 1024)).Decode(&input) != nil || (input.Role != "employee" && input.Role != "admin") {
 			Reply(writer, 400, map[string]string{"error": "테스트 계정을 선택해주세요."})
@@ -106,6 +107,13 @@ func (development *Development) Register(router chi.Router) {
 		}
 		var user User
 		email := input.Role + "@example.invalid"
+		if input.Account != "" {
+			if input.Account != "employee-b" || input.Role != "employee" {
+				Reply(writer, 400, map[string]string{"error": "올바른 테스트 계정을 선택해주세요."})
+				return
+			}
+			email = "employee-b@example.invalid"
+		}
 		if err := development.database.QueryRowContext(request.Context(), "SELECT id,email,role,active FROM users WHERE email=? AND role=? AND active=1", email, input.Role).Scan(&user.ID, &user.Email, &user.Role, &user.Active); err != nil {
 			Reply(writer, 403, map[string]string{"error": "사용할 수 없는 계정입니다."})
 			return

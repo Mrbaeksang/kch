@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      PORT: "8080"
+      DATABASE_PATH: /data/app.sqlite
+      APP_ENV: development
+      DEV_LOGIN_ENABLED: "true"
+      DEV_FRONTEND_ORIGIN: http://localhost:5173
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - sqlite-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  frontend:
+    build: ./frontend
+    environment:
+      API_PROXY_TARGET: http://backend:8080
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  sqlite-data:

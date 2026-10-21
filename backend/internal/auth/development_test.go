@@ -24,6 +24,45 @@ func TestDevelopmentLoginIsExplicitAndNotProduction(t *testing.T) {
 	}
 }
 
+func TestSecondEmployeeHasDistinctDevelopmentIdentity(t *testing.T) {
+	connection, err := database.Open(context.Background(), filepath.Join(t.TempDir(), "app.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer connection.Close()
+	identity, err := NewDevelopment(connection, "development", true, "http://localhost:5173")
+	if err != nil {
+		t.Fatal(err)
+	}
+	router := chi.NewRouter()
+	identity.Register(router)
+	login := func(body string) *httptest.ResponseRecorder {
+		request := httptest.NewRequest("POST", "/api/auth/dev-login", strings.NewReader(body))
+		request.Header.Set("Origin", "http://localhost:5173")
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+		return response
+	}
+	first := login(`{"role":"employee"}`)
+	second := login(`{"role":"employee","account":"employee-b"}`)
+	if first.Code != 200 || second.Code != 200 {
+		t.Fatal("employee login failed")
+	}
+	if !strings.Contains(second.Body.String(), "employee-b@example.invalid") {
+		t.Fatal("second employee identity not selected", second.Body.String())
+	}
+	request := httptest.NewRequest("GET", "/api/auth/me", nil)
+	request.AddCookie(first.Result().Cookies()[0])
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != 200 {
+		t.Fatal("second employee login invalidated the first employee")
+	}
+	if response := login(`{"role":"admin","account":"employee-b"}`); response.Code != 400 {
+		t.Fatal("test employee selected administrator role")
+	}
+}
+
 func TestLoginLogoutAndDisabledAccount(t *testing.T) {
 	connection, err := database.Open(context.Background(), filepath.Join(t.TempDir(), "app.sqlite"))
 	if err != nil {

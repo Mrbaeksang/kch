@@ -16,3 +16,4 @@ coverage/
 backend/server
 tmp/
 .vercel/
+frontend/*-preview.png

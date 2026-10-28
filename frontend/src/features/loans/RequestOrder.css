@@ -1,0 +1,4 @@
+.request-order { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; color: #667568; }
+.request-order select { font: inherit; padding: 8px 10px; border: 1px solid #ccd4cd; border-radius: 5px; background: #fff; color: #192c28; }
+.request-order select:focus-visible { outline: 3px solid #729c86; outline-offset: 3px; }
+.due-date-check { color: #a4492f; font-weight: 500; }

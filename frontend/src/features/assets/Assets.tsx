@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { User } from '../auth/api'
 import { LoanRequestForm } from '../loans/LoanRequestForm'
+import { AssetFilters, filterAssets, noFilter, type AssetFilterValue } from './AssetFilters'
 import { ExportAssetsCsv } from './ExportAssetsCsv'
 import { CopyAssetInfo } from './CopyAssetInfo'
 
@@ -36,6 +37,7 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<AssetFilterValue>(noFilter)
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
@@ -66,7 +68,7 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
     finally { setBusy(false) }
   }
   function open(asset: Asset) { setSelected(asset.id); setMode('view'); setError(''); setMessage('') }
-  const visible = assets.filter(asset => `${asset.assetNumber} ${asset.name} ${asset.model} ${asset.category}`.toLowerCase().includes(search.trim().toLowerCase()))
+  const visible = filterAssets(assets, filter).filter(asset => `${asset.assetNumber} ${asset.name} ${asset.model} ${asset.category}`.toLowerCase().includes(search.trim().toLowerCase()))
   return <section className="assets" aria-label="장비 관리">
     <div className="assets-title"><div><div className="eyebrow">EQUIPMENT</div><h1>장비 목록</h1><p>업무에 필요한 장비와 보관 위치를 확인하세요.</p></div>
       {user.role === 'admin' ? <ExportAssetsCsv assets={assets} statusLabels={statusLabels} disabled={loading || error !== ''} /> : null}
@@ -75,8 +77,8 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
     {error ? <div className="notice error" role="alert">{error}<button onClick={() => { setError(''); setVersion(value => value + 1) }}>다시 조회</button></div> : null}
     {message ? <p className="notice" role="status">{message}</p> : null}
     <div className="asset-layout"><div className="asset-list">
-      <div className="list-tools"><label htmlFor="asset-search" className="sr-only">장비 검색</label><input id="asset-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="장비명, 자산번호, 모델 검색" /><span>전체 {assets.length}대</span></div>
-      {loading ? <p className="empty" role="status">장비를 불러오고 있습니다.</p> : visible.length === 0 ? <div className="empty"><h2>{assets.length ? '검색 결과가 없습니다.' : '아직 등록된 장비가 없습니다.'}</h2><p>{user.role === 'admin' ? '장비 등록 버튼으로 첫 장비를 추가하세요.' : '관리자가 장비를 등록하면 여기에 표시됩니다.'}</p></div> :
+      <div className="list-tools"><label htmlFor="asset-search" className="sr-only">장비 검색</label><input id="asset-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="장비명, 자산번호, 모델 검색" /><AssetFilters assets={assets} value={filter} onChange={setFilter} /><span>{`결과 ${visible.length}대 / 전체 ${assets.length}대`}</span></div>
+      {loading ? <p className="empty" role="status">장비를 불러오고 있습니다.</p> : visible.length === 0 ? assets.length ? <div className="empty"><h2>조건에 맞는 장비가 없습니다.</h2><p>검색어나 분류·상태 조건을 바꿔 보세요.</p><button className="asset-filters-reset" onClick={() => { setSearch(''); setFilter(noFilter) }}>조건 초기화</button></div> : <div className="empty"><h2>아직 등록된 장비가 없습니다.</h2><p>{user.role === 'admin' ? '장비 등록 버튼으로 첫 장비를 추가하세요.' : '관리자가 장비를 등록하면 여기에 표시됩니다.'}</p></div> :
       <div className="table-scroll"><table><thead><tr><th>장비</th><th>분류</th><th>보관 위치</th><th>상태</th></tr></thead><tbody>{visible.map(asset => <tr key={asset.id} className={selected === asset.id ? 'selected' : ''}><td><button className="asset-link" onClick={() => open(asset)}>{asset.name}</button><small>{asset.assetNumber} · {asset.model || '모델 미입력'}</small></td><td>{asset.category || '—'}</td><td>{asset.location || '—'}</td><td><span className="badge">{statusLabels[asset.status]||asset.status}</span></td></tr>)}</tbody></table></div>}
     </div><aside className="asset-panel" aria-label="장비 상세">
       {mode !== 'view' ? <form onSubmit={save}>

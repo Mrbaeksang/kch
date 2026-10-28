@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loanRequest, type LoanRequest } from './api'
+import { isValidDueDate, orderRequests, RequestOrderSelect, useRequestOrder } from './RequestOrder'
 
 const labels:Record<string,string>={pending:'승인 대기',cancelled:'취소됨',approved:'승인됨',rejected:'거절됨'}
 
@@ -10,6 +11,7 @@ export function Requests({revision,onCancelled}:{revision:number;onCancelled?:()
   const [busy,setBusy]=useState<number|null>(null)
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
+  const [order,setOrder]=useRequestOrder()
   useEffect(()=>{
     let active=true
     setLoading(true)
@@ -27,11 +29,12 @@ export function Requests({revision,onCancelled}:{revision:number;onCancelled?:()
   return <section className="requests" aria-label="내 대여 신청">
     <div className="requests-heading"><div><div className="eyebrow">MY REQUESTS</div><h2>내 대여 신청</h2></div><button onClick={()=>{setError('');setRefresh(value=>value+1)}} disabled={loading}>새로고침</button></div>
     <p className="muted">승인 대기 중에만 취소할 수 있습니다. 반납 예정일은 한국 시간 기준입니다.</p>
+    {requests.length>0?<RequestOrderSelect value={order} onChange={setOrder}/>:null}
     {error?<p className="notice error" role="alert">{error}</p>:null}
     {message?<p className="notice" role="status">{message}</p>:null}
-    {loading?<p role="status">신청을 불러오고 있습니다.</p>:requests.length===0?<p>아직 신청한 장비가 없습니다.</p>:<div className="table-scroll"><table><thead><tr><th>장비</th><th>반납 예정일</th><th>처리 상태</th><th>관리</th></tr></thead><tbody>{requests.map(request=><tr key={request.id}>
+    {loading?<p role="status">신청을 불러오고 있습니다.</p>:requests.length===0?<p>아직 신청한 장비가 없습니다.</p>:<div className="table-scroll"><table><thead><tr><th>장비</th><th>반납 예정일</th><th>처리 상태</th><th>관리</th></tr></thead><tbody>{orderRequests(requests,order).map(request=><tr key={request.id}>
       <td>{request.assetName}<small>{request.assetNumber}</small>{request.reason?<small>{request.reason}</small>:null}</td>
-      <td>{request.dueDate}</td><td><span className="badge">{labels[request.status]||request.status}</span></td>
+      <td>{isValidDueDate(request.dueDate)?request.dueDate:<><span className="due-date-check">날짜 확인 필요</span>{request.dueDate?<small>{request.dueDate}</small>:null}</>}</td><td><span className="badge">{labels[request.status]||request.status}</span></td>
       <td>{request.status==='pending'?<button className="cancel-request" disabled={busy!==null} aria-label={`${request.assetName} 신청 취소`} onClick={()=>cancel(request.id)}>{busy===request.id?'취소 중…':'신청 취소'}</button>:'—'}</td>
     </tr>)}</tbody></table></div>}
   </section>

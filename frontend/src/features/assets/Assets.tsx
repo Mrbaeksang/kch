@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { User } from '../auth/api'
 import { LoanRequestForm } from '../loans/LoanRequestForm'
+import { ExportAssetsCsv } from './ExportAssetsCsv'
 import { CopyAssetInfo } from './CopyAssetInfo'
 
 type Asset = { id: number; assetNumber: string; name: string; model: string; category: string; description: string; location: string; status: string }
@@ -68,6 +69,7 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
   const visible = assets.filter(asset => `${asset.assetNumber} ${asset.name} ${asset.model} ${asset.category}`.toLowerCase().includes(search.trim().toLowerCase()))
   return <section className="assets" aria-label="장비 관리">
     <div className="assets-title"><div><div className="eyebrow">EQUIPMENT</div><h1>장비 목록</h1><p>업무에 필요한 장비와 보관 위치를 확인하세요.</p></div>
+      {user.role === 'admin' ? <ExportAssetsCsv assets={assets} statusLabels={statusLabels} disabled={loading || error !== ''} /> : null}
       {user.role === 'admin' ? <button className="primary" onClick={() => { setMode('create'); setSelected(null); setDraft({ ...empty }); setError(''); setMessage('') }}>+ 장비 등록</button> : null}
     </div>
     {error ? <div className="notice error" role="alert">{error}<button onClick={() => { setError(''); setVersion(value => value + 1) }}>다시 조회</button></div> : null}

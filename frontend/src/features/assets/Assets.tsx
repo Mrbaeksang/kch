@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import type { User } from '../auth/api'
 import { LoanRequestForm } from '../loans/LoanRequestForm'
 import { AssetFilters, filterAssets, noFilter, type AssetFilterValue } from './AssetFilters'
+import { ExportAssetsCsv } from './ExportAssetsCsv'
+import { CopyAssetInfo } from './CopyAssetInfo'
 
 type Asset = { id: number; assetNumber: string; name: string; model: string; category: string; description: string; location: string; status: string }
 type Draft = Omit<Asset, 'id' | 'status'>
@@ -69,6 +71,7 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
   const visible = filterAssets(assets, filter).filter(asset => `${asset.assetNumber} ${asset.name} ${asset.model} ${asset.category}`.toLowerCase().includes(search.trim().toLowerCase()))
   return <section className="assets" aria-label="장비 관리">
     <div className="assets-title"><div><div className="eyebrow">EQUIPMENT</div><h1>장비 목록</h1><p>업무에 필요한 장비와 보관 위치를 확인하세요.</p></div>
+      {user.role === 'admin' ? <ExportAssetsCsv assets={assets} statusLabels={statusLabels} disabled={loading || error !== ''} /> : null}
       {user.role === 'admin' ? <button className="primary" onClick={() => { setMode('create'); setSelected(null); setDraft({ ...empty }); setError(''); setMessage('') }}>+ 장비 등록</button> : null}
     </div>
     {error ? <div className="notice error" role="alert">{error}<button onClick={() => { setError(''); setVersion(value => value + 1) }}>다시 조회</button></div> : null}
@@ -86,6 +89,7 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
       </form> : detailLoading ? <p role="status">상세 정보를 불러오는 중입니다.</p> : detail ? <>
         <div className="eyebrow">ASSET DETAILS</div><h2>{detail.name}</h2><span className="badge">{statusLabels[detail.status]||detail.status}</span>
         <dl>{fields.filter(field => field.key !== 'name').map(field => <div key={field.key}><dt>{field.label}</dt><dd>{detail[field.key] || '—'}</dd></div>)}<div><dt>설명</dt><dd className="description">{detail.description || '등록된 설명이 없습니다.'}</dd></div></dl>
+        <CopyAssetInfo asset={detail} statusLabel={statusLabels[detail.status]||detail.status} />
         {user.role === 'employee' && detail.status === 'available' ? <LoanRequestForm key={detail.id} assetId={detail.id} resetVersion={requestResetVersion} onSubmitted={() => onRequestCreated?.()} /> : null}
         {user.role === 'admin' ? <button onClick={() => { setDraft({ assetNumber: detail.assetNumber, name: detail.name, model: detail.model, category: detail.category, location: detail.location, description: detail.description }); setMode('edit'); setError('') }}>장비 정보 수정</button> : null}
       </> : <div className="panel-placeholder"><h2>장비 상세 정보</h2><p>목록에서 장비명을 선택하면<br />상세 정보를 확인할 수 있습니다.</p></div>}

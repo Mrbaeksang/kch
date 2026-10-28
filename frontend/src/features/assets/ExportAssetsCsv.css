@@ -1,0 +1,2 @@
+.assets-title .export-assets-csv { margin-left: auto; }
+@media(max-width: 480px) { .assets-title .export-assets-csv { margin-left: 0; } }

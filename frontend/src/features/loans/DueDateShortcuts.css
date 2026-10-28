@@ -1,0 +1,2 @@
+.due-date-shortcuts { display: flex; gap: 8px; margin: -8px 0 12px; }
+.due-date-shortcuts button { width: auto; flex: 1; margin: 0; padding: 9px 12px; font-size: 13px; white-space: nowrap; }

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { User } from '../auth/api'
 import { LoanRequestForm } from '../loans/LoanRequestForm'
+import { AssetStatusSummary } from './AssetStatusSummary'
 
 type Asset = { id: number; assetNumber: string; name: string; model: string; category: string; description: string; location: string; status: string }
 type Draft = Omit<Asset, 'id' | 'status'>
@@ -29,6 +30,7 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
   const [mode, setMode] = useState<'view' | 'create' | 'edit'>('view')
   const [version, setVersion] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [listFailed, setListFailed] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -37,8 +39,9 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
+    setListFailed(false)
     request<Asset[]>('', { signal: controller.signal }).then(setAssets)
-      .catch(failure => { if (!controller.signal.aborted) setError(failure.message) })
+      .catch(failure => { if (!controller.signal.aborted) { setError(failure.message); setListFailed(true) } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [version])
@@ -69,6 +72,7 @@ export function Assets({ user, onRequestCreated,requestResetVersion=0 }: { user:
     <div className="assets-title"><div><div className="eyebrow">EQUIPMENT</div><h1>장비 목록</h1><p>업무에 필요한 장비와 보관 위치를 확인하세요.</p></div>
       {user.role === 'admin' ? <button className="primary" onClick={() => { setMode('create'); setSelected(null); setDraft({ ...empty }); setError(''); setMessage('') }}>+ 장비 등록</button> : null}
     </div>
+    <AssetStatusSummary assets={assets} loading={loading} failed={listFailed} />
     {error ? <div className="notice error" role="alert">{error}<button onClick={() => { setError(''); setVersion(value => value + 1) }}>다시 조회</button></div> : null}
     {message ? <p className="notice" role="status">{message}</p> : null}
     <div className="asset-layout"><div className="asset-list">

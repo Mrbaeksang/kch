@@ -1,0 +1,11 @@
+.asset-filters { display: flex; gap: 8px; flex-shrink: 0; }
+.asset-filters select { font: inherit; padding: 11px 12px; border: 1px solid #ccd4cd; border-radius: 5px; background: #fff; color: inherit; max-width: 140px; }
+.asset-filters select:focus-visible { outline: 3px solid #729c86; outline-offset: 3px; }
+.asset-filters-reset { width: auto; padding: 10px 18px; }
+/* 좁은 화면에서는 검색창을 한 줄 전체로 두고 필터와 건수를 다음 줄에 둔다 */
+@media(max-width: 600px) {
+  .list-tools:has(> .asset-filters) { flex-wrap: wrap; }
+  .list-tools:has(> .asset-filters) > input { flex: 1 0 100%; }
+  .asset-filters { flex: 1; }
+  .asset-filters select { flex: 1; max-width: none; min-width: 0; }
+}
